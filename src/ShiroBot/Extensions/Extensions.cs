@@ -146,6 +146,9 @@ namespace ShiroBot.Extensions
             return list.ToArray();
         }
 
+        public static Task<IUserMessage> EmbedAsync(this IMessageChannel ch, EmbedBuilder embed, string msg = "")
+             => ch.SendMessageAsync(msg, embed: embed);
+
         public static Task<IUserMessage> SendTableAsync<T>(this IMessageChannel ch, string seed, IEnumerable<T> items, Func<T, string> howToPrint, int columns = 3)
         {
             var i = 0;

@@ -19,8 +19,9 @@ namespace ShiroBot.Services.Impl
 
         public const string BotVersion = "0.1-alpha";
 
-        public string Author => "fkndean#7748";
+        public string Author => "fkndean#7748, keyphact#0468";
         public string Library => "Discord.Net-beta2";
+        public string AvatarURL => "http://i.imgur.com/x5Z2Tbs.jpg";
         public int MessageCounter { get; private set; } = 0;
         public int CommandsRan { get; private set; } = 0;
         public string Heap => Math.Round((double)GC.GetTotalMemory(false) / 1.MiB(), 2).ToString();
@@ -29,47 +30,20 @@ namespace ShiroBot.Services.Impl
         public int VoiceChannels => client.GetGuilds().SelectMany(g => g.GetChannelsAsync().Result.Where(c => c is IVoiceChannel)).Count();
         public string OwnerIds => string.Join(", ", ShiroBot.Credentials.OwnerIds);
 
-
-
-        Timer carbonitexTimer { get; }
-
-        public Stats(ShardedDiscordClient client, CommandHandler cmdHandler)
+        public Stats(ShardedDiscordClient client)
         {
 
             this.client = client;
 
             Reset();
             this.client.MessageReceived += _ => Task.FromResult(MessageCounter++);
-            cmdHandler.CommandExecuted += (_, e) => CommandsRan++;
 
             this.client.Disconnected += _ => Reset();
-
-            this.carbonitexTimer = new Timer(async (state) =>
-            {
-                if (string.IsNullOrWhiteSpace(ShiroBot.Credentials.CarbonKey))
-                    return;
-                try
-                {
-                    using (var http = new HttpClient())
-                    {
-                        using (var content = new FormUrlEncodedContent(
-                            new Dictionary<string, string> {
-                                { "servercount", this.client.GetGuilds().Count.ToString() },
-                                { "key", ShiroBot.Credentials.CarbonKey }}))
-                        {
-                            content.Headers.Clear();
-                            content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-
-                            var res = await http.PostAsync("https://www.carbonitex.net/discord/data/botdata.php", content).ConfigureAwait(false);
-                        }
-                    };
-                }
-                catch { }
-            }, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1));
         }
         public async Task<string> Print()
         {
             var curUser = await client.GetCurrentUserAsync();
+
             return $@"
 Author: [{Author}] | Library: [{Library}]
 Bot Version: [{BotVersion}]
