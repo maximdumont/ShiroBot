@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -23,15 +22,6 @@ namespace ShiroBot
 
         private readonly EventHandler _eventHandler;
 
-        //Add static self -- testing just for infomodule ignore.
-        public static SocketSelfUser currUser;
-        public static CommandService currCommandService;
-        public static DiscordSocketClient currClient;
-        public static Configuration currConfig;
-
-        public static int TextChannels;
-        public static int VoiceChannels;
-
         public Application(Configuration configuration)
         {
             _configuration = configuration;
@@ -46,8 +36,7 @@ namespace ShiroBot
             });
             _commandService = new CommandService();
             _eventHandler = new EventHandler(_discordClient, _commandService, dependencyMap);
-
-            dependencyMap.Add(_commandService);
+            
             dependencyMap.Add(_eventHandler);
             dependencyMap.Add(_discordClient);
         }
@@ -65,23 +54,17 @@ namespace ShiroBot
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly());
 
             // Grab all the Text and Voice channels once
-            TextChannels = _discordClient.Guilds.SelectMany(x => x.GetTextChannelsAsync().Result).Count();
-            VoiceChannels = _discordClient.Guilds.SelectMany(x => x.GetVoiceChannelsAsync().Result).Count();
+            var textChannels = _discordClient.Guilds.SelectMany(x => x.GetTextChannelsAsync().Result).Count();
+            var voiceChannels = _discordClient.Guilds.SelectMany(x => x.GetVoiceChannelsAsync().Result).Count();
 
             // Show information
             Logger.Info("Succesfully connected to Discord.");
-            Logger.Info($"{"Username:",-10} {_discordClient.CurrentUser.Username}");
-            Logger.Info($"{"ClientID:",-10} {_discordClient.CurrentUser.Id}");
-            Logger.Info($"{"Guilds:",-10} {_discordClient.Guilds.Count}");
-            Logger.Info($"{"Commands:",-10} {_commandService.Commands.Count()}");
-            Logger.Info($"{"Text Channels:",-10} {TextChannels}");
-            Logger.Info($"{"Voice Channels:",-10} {VoiceChannels}");
-
-            // add static self user -- just testing so i can call it in infomodule
-            currUser = _discordClient.CurrentUser;
-            currClient = _discordClient;
-            currCommandService = _commandService;
-            currConfig = _configuration;
+            Logger.Info($"{"Username:",-15} {_discordClient.CurrentUser.Username}");
+            Logger.Info($"{"ClientID:",-15} {_discordClient.CurrentUser.Id}");
+            Logger.Info($"{"Guilds:",-15} {_discordClient.Guilds.Count}");
+            Logger.Info($"{"Commands:",-15} {_commandService.Commands.Count()}");
+            Logger.Info($"{"Text Channels:",-15} {textChannels}");
+            Logger.Info($"{"Voice Channels:",-15} {voiceChannels}");
 
             // Register events
             // _discordClient.Log += _eventHandler.DiscordClientOnLog;
