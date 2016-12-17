@@ -68,10 +68,9 @@ namespace ShiroBot
                 var curUser = await Client.GetCurrentUserAsync().ConfigureAwait(true);
                 var stats = Stats;
                 var embed = new EmbedBuilder()
-                    .WithAuthor(x => x.WithName(stats.Author).WithUrl(stats.AvatarURL))
+                    .WithAuthor(x => x.WithName(curUser.Username).WithIconUrl(curUser.AvatarUrl))
                     .WithThumbnailUrl(stats.AvatarURL)
                     .WithColor(new Color(0, 255, 0))
-                    .WithTitle("ShiroBot")
                     .AddField(x => x.WithName("__Library__").WithValue(stats.Library).WithIsInline(false))
                     .AddField(x => x.WithName("__Bot Version__").WithValue(Stats.BotVersion).WithIsInline(false))
                     .AddField(x => x.WithName("__Bot ID__").WithValue(curUser.Id.ToString()).WithIsInline(false))

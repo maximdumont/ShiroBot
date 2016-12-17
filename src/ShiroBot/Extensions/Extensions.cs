@@ -1,10 +1,7 @@
 ﻿using Discord;
-using Discord.API;
-using Discord.WebSocket;
 using ImageSharp;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

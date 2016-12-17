@@ -1,13 +1,7 @@
 using Discord;
-using Discord.WebSocket;
-using ShiroBot;
 using ShiroBot.Extensions;
-using ShiroBot.Services;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ShiroBot.Services.Impl
@@ -21,7 +15,6 @@ namespace ShiroBot.Services.Impl
 
         public string Author => "fkndean#7748, keyphact#0468";
         public string Library => "Discord.Net-beta2";
-        public string AvatarURL => "http://i.imgur.com/x5Z2Tbs.jpg";
         public int MessageCounter { get; private set; } = 0;
         public int CommandsRan { get; private set; } = 0;
         public string Heap => Math.Round((double)GC.GetTotalMemory(false) / 1.MiB(), 2).ToString();
