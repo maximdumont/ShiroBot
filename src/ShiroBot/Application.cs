@@ -10,7 +10,7 @@ using NLog;
 
 namespace ShiroBot
 {
-    public class Application
+    public class Application : ModuleBase
     {
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -22,6 +22,16 @@ namespace ShiroBot
         private readonly CommandService _commandService;
 
         private readonly EventHandler _eventHandler;
+
+        //Grab Total int values for Text Channels and Voice Channels.
+        public static int TextChannels;
+        public static int VoiceChannels;
+
+        //Add static self -- testing just for infomodule ignore.
+        public static SocketSelfUser currUser;
+        public static CommandService currCommandService;
+        public static DiscordSocketClient currClient;
+        public static Configuration currConfig;
 
         public Application(Configuration configuration)
         {
@@ -55,11 +65,24 @@ namespace ShiroBot
             // Discover all of the commands in this assembly and load them.
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly());
 
+            // Grab all the Text and Voice channels once
+            TextChannels = _discordClient.Guilds.SelectMany(x => x.GetTextChannelsAsync().Result).Count();
+            VoiceChannels = _discordClient.Guilds.SelectMany(x => x.GetVoiceChannelsAsync().Result).Count();
+
             // Show information
             Logger.Info("Succesfully connected to Discord.");
             Logger.Info($"{"Username:",-10} {_discordClient.CurrentUser.Username}");
+            Logger.Info($"{"ClientID:",-10} {_discordClient.CurrentUser.Id}");
             Logger.Info($"{"Guilds:",-10} {_discordClient.Guilds.Count}");
             Logger.Info($"{"Commands:",-10} {_commandService.Commands.Count()}");
+            Logger.Info($"{"Text Channels:",-10} {TextChannels}");
+            Logger.Info($"{"Voice Channels:",-10} {VoiceChannels}");
+
+            // add static self user -- just testing so i can call it in infomodule
+            currUser = _discordClient.CurrentUser;
+            currClient = _discordClient;
+            currCommandService = _commandService;
+            currConfig = _configuration;
 
             // Register events
             // _discordClient.Log += _eventHandler.DiscordClientOnLog;
