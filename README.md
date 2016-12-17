@@ -1,1 +1,3 @@
 # ShiroBot
+
+Cool

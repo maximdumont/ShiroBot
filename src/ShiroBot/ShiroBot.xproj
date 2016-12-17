@@ -7,7 +7,7 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>3286abcc-c1e1-449c-a38d-4fce10bdcb0e</ProjectGuid>
+    <ProjectGuid>7756364a-5e7b-44ce-b8c1-5fef709b6899</ProjectGuid>
     <RootNamespace>ShiroBot</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">.\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">.\bin\</OutputPath>

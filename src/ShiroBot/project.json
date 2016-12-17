@@ -3,26 +3,24 @@
   "buildOptions": {
     "emitEntryPoint": true
   },
-
   "dependencies": {
-    "Discord.Net": "1.0.0-beta2-00502",
-    "ImageSharp": "1.0.0-alpha-000150",
-    "Microsoft.DotNet.Cli.Utils": "1.0.0-preview2-003121",
-    "Microsoft.EntityFrameworkCore": "1.1.0",
-    "Microsoft.EntityFrameworkCore.Sqlite": "1.1.0",
-    "Microsoft.Extensions.Configuration": "1.1.0",
-    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.1.0",
-    "Microsoft.Extensions.Configuration.Json": "1.1.0",
-    "Microsoft.NETCore.App": {
-      "type": "platform",
-      "version": "1.0.1"
-    },
-    "Newtonsoft.Json": "9.0.1",
+    "Discord.Net": "1.0.0-beta2-00512",
+    "Discord.Net.Commands": "1.0.0-beta2-00512",
+    "Discord.Net.Core": "1.0.0-beta2-00512",
+    "Discord.Net.Rest": "1.0.0-beta2-00512",
+    "Discord.Net.Rpc": "1.0.0-beta2-00512",
+    "Discord.Net.WebSocket": "1.0.0-beta2-00512",
+    "Newtonsoft.Json": "9.0.2-beta1",
     "NLog": "5.0.0-beta03"
   },
-
   "frameworks": {
-    "netcoreapp1.0": {
+    "netcoreapp1.1": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.1.0"
+        }
+      },
       "imports": "dnxcore50"
     }
   }
