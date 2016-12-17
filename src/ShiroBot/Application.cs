@@ -23,15 +23,14 @@ namespace ShiroBot
 
         private readonly EventHandler _eventHandler;
 
-        //Grab Total int values for Text Channels and Voice Channels.
-        public static int TextChannels;
-        public static int VoiceChannels;
-
         //Add static self -- testing just for infomodule ignore.
         public static SocketSelfUser currUser;
         public static CommandService currCommandService;
         public static DiscordSocketClient currClient;
         public static Configuration currConfig;
+
+        public static int TextChannels;
+        public static int VoiceChannels;
 
         public Application(Configuration configuration)
         {
