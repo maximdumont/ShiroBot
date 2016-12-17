@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Discord.Commands;
 using Discord;
-using Discord.WebSocket;
-using Discord.Audio;
 using System;
 using System.Linq;
 
@@ -13,7 +11,6 @@ namespace ShiroBot.Commands
         public async Task<IUserMessage> EmbedReplyAsync(EmbedBuilder embed, string msg = "")
             => await ReplyAsync("", embed: embed);
 
-        // Pls don't modify, this will work after updating Discord.NET build after the build of (Friday, December 16, 2016 (12/16/2016))
         [Command("say"), Summary("Echos a message.")]
         public async Task Say([Remainder, Summary("The text to echo")] string echo)
         {
