@@ -3,7 +3,9 @@ using Discord.Commands;
 using Discord;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Discord.WebSocket;
+using System.Collections.Generic;
 
 namespace ShiroBot.Commands
 {
@@ -20,30 +22,71 @@ namespace ShiroBot.Commands
         }
 
         [Command("say"), Summary("Echos a message.")]
-        public async Task Say([Remainder, Summary("The text to echo")] string echo)
+        [Alias("echo")]
+        public async Task Say([Summary("The (optional) user to get info for")] IUser user, [Remainder, Summary("The text to echo")] string echo)
         {
-            // ReplyAsync is a method on ModuleBase
-            await ReplyAsync(echo);
+            try
+            {
+                // ReplyAsync is a method on ModuleBase
+                var userInfo = user ?? Context.Client.CurrentUser;
+                await ReplyAsync($"{userInfo.Username}#{userInfo.Discriminator}: {echo}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                await ReplyAsync("User not found.");
+            }
+        }
+
+        //Testing prune command
+        [Command("prune"), Summary("Prunes messages.")]
+        [Alias("delete")]
+        public async Task Messages(IUser user, int count = 5)
+        {
+            try
+            {
+                var channel = (ITextChannel)Context.Message.Channel;
+                var enumerable =
+                    channel.GetMessagesAsync(limit: count + 1)
+                        .ToEnumerable()
+                        .SelectMany(x => x.Where(y => y.Author.Id == user.Id));
+                await channel.DeleteMessagesAsync(enumerable).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
 
         //Testing stats command
         [Command("stats"), Summary("Grabs bot statistics.")]
+        [Alias("statistics")]
         public async Task Stats()
         {
+            //Grab the channel where the command was run.
+            IMessageChannel channel = Context.Message.Channel;
+            //Convert to ITextChannel so I can convert it to an IGuild
+            var localchann = (ITextChannel) channel;
+            var localguild = (IGuild) localchann.Guild;
+            //I wasn't really quite too sure, I wanted to make sure that it's grabbing local guild information.
+
             var currUser = _discordClient.CurrentUser;
 
             var guilds = _discordClient.Guilds.Count;
             var commands = _commands.Commands.Count();
             var textChannels = _discordClient.Guilds.SelectMany(x => x.GetTextChannelsAsync().Result).Count();
+            var localTextChannels = localguild.GetTextChannelsAsync().GetAwaiter().GetResult().Count();
             var voiceChannels = _discordClient.Guilds.SelectMany(x => x.GetVoiceChannelsAsync().Result).Count();
+            var voiceTextChannels = localguild.GetVoiceChannelsAsync().GetAwaiter().GetResult().Count();
+            var gatewayLatency = _discordClient.Latency;
 
             var embed = new EmbedBuilder()
                 .WithAuthor(x => x.WithName(currUser.Username).WithIconUrl(currUser.AvatarUrl).WithUrl("https://shirobot.xyz/"))
                 .WithThumbnailUrl("http://i.imgur.com/T9BwNLI.png")
-                .AddField(x => x.WithName("Guilds").WithValue(guilds.ToString()).WithIsInline(true))
-                .AddField(x => x.WithName("Commands").WithValue(commands.ToString()).WithIsInline(true))
-                .AddField(x => x.WithName("Statistics").WithValue($"Text Channels: {textChannels}\nVoice Channels: {voiceChannels}").WithIsInline(true))
-                .AddField(x => x.WithName("Invite").WithValue($"<https://discordapp.com/oauth2/authorize?client_id={currUser.Id}&scope=bot>").WithIsInline(true))
+                .WithDescription($"⚡ `Discord Gateway API` [**{gatewayLatency}**`ms`]")
+                .AddField(x => x.WithName($"🌐 Statistics").WithValue($"**__Guilds__**: {guilds.ToString()}\n**__Commands__**: {commands.ToString()}\n**__Text Channels__**: {textChannels}\n**__Voice Channels__**: {voiceChannels}").WithIsInline(false))
+                .AddField(x => x.WithName($"🏠 Statistics").WithValue($"**__Guild__**: {localguild.ToString()}\n**__GuildID__**: {localguild.Id}\n**__Text Channels__**: {localTextChannels}\n**__Voice Channels__**: {voiceTextChannels}").WithIsInline(false))
+                .WithFooter(x => x.WithText($"©️ Shiro Bot"))
                 .WithColor(new Color(0, 255, 0))
                 .WithTimestamp(DateTimeOffset.UtcNow);
 

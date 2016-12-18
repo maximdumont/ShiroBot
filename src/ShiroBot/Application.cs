@@ -57,8 +57,11 @@ namespace ShiroBot
             var textChannels = _discordClient.Guilds.SelectMany(x => x.GetTextChannelsAsync().Result).Count();
             var voiceChannels = _discordClient.Guilds.SelectMany(x => x.GetVoiceChannelsAsync().Result).Count();
 
+            // Grab Gateway Latency
+            var gatewayLatency = _discordClient.Latency;
+
             // Show information
-            Logger.Info("Succesfully connected to Discord.");
+            Logger.Info($"Succesfully connected to Discord. [{gatewayLatency}ms]");
             Logger.Info($"{"Username:",-15} {_discordClient.CurrentUser.Username}");
             Logger.Info($"{"ClientID:",-15} {_discordClient.CurrentUser.Id}");
             Logger.Info($"{"Guilds:",-15} {_discordClient.Guilds.Count}");
