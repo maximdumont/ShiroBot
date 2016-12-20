@@ -2,10 +2,11 @@
 using Discord.Commands;
 using Discord;
 using System;
+using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Discord.WebSocket;
-using System.Collections.Generic;
+using System.Net.Http;
+using Discord.API;
 
 namespace ShiroBot.Commands
 {
@@ -20,6 +21,7 @@ namespace ShiroBot.Commands
             _commands = commands;
             _discordClient = map.Get<DiscordSocketClient>();
         }
+
 
         [Command("say"), Summary("Echos a message.")]
         [Alias("echo")]
@@ -36,6 +38,24 @@ namespace ShiroBot.Commands
                 Console.WriteLine(ex.ToString());
                 await ReplyAsync("User not found.");
             }
+        }
+
+        [Command("setavatar"), Summary("Sets bot avatar.")]
+        [Alias("sa")]
+        public async Task SetAvatar(string img)
+        {
+            using (var http = new HttpClient())
+            {
+                using (var sr = await http.GetStreamAsync(img))
+                {
+                    var imgStream = new MemoryStream();
+                    await sr.CopyToAsync(imgStream);
+                    imgStream.Position = 0;
+                    await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Optional<Image>(new Image(imgStream)));
+                }
+            }
+
+            await ReplyAsync("Successfully changed avatar.");
         }
 
         //Testing prune command
@@ -83,9 +103,9 @@ namespace ShiroBot.Commands
             var embed = new EmbedBuilder()
                 .WithAuthor(x => x.WithName(currUser.Username).WithIconUrl(currUser.AvatarUrl).WithUrl("https://shirobot.xyz/"))
                 .WithThumbnailUrl("http://i.imgur.com/T9BwNLI.png")
-                .WithDescription($"⚡ `Discord Gateway API` [**{gatewayLatency}**`ms`]")
-                .AddField(x => x.WithName($"🌐 Statistics").WithValue($"**__Guilds__**: {guilds.ToString()}\n**__Commands__**: {commands.ToString()}\n**__Text Channels__**: {textChannels}\n**__Voice Channels__**: {voiceChannels}").WithIsInline(false))
-                .AddField(x => x.WithName($"🏠 Statistics").WithValue($"**__Guild__**: {localguild.ToString()}\n**__GuildID__**: {localguild.Id}\n**__Text Channels__**: {localTextChannels}\n**__Voice Channels__**: {voiceTextChannels}").WithIsInline(false))
+                .WithDescription($"⚡ `Discord Gateway API` [**{gatewayLatency}**`ms`]\n💬 `Total Messages` {Application.MessageCounter}")
+                .AddField(x => x.WithName($"🌐 Global").WithValue($"**__Guilds__**: {guilds.ToString()}\n**__Commands__**: {commands.ToString()}\n**__Text Channels__**: {textChannels}\n**__Voice Channels__**: {voiceChannels}").WithIsInline(false))
+                .AddField(x => x.WithName($"🏠 Local").WithValue($"**__Guild__**: {localguild.ToString()}\n**__GuildID__**: {localguild.Id}\n**__Text Channels__**: {localTextChannels}\n**__Voice Channels__**: {voiceTextChannels}").WithIsInline(false))
                 .WithFooter(x => x.WithText($"©️ Shiro Bot"))
                 .WithColor(new Color(0, 255, 0))
                 .WithTimestamp(DateTimeOffset.UtcNow);

@@ -22,6 +22,8 @@ namespace ShiroBot
 
         private readonly EventHandler _eventHandler;
 
+        public static int MessageCounter { get; private set; } = 0;
+
         public Application(Configuration configuration)
         {
             _configuration = configuration;
@@ -72,6 +74,7 @@ namespace ShiroBot
             // Register events
             // _discordClient.Log += _eventHandler.DiscordClientOnLog;
             _discordClient.MessageReceived += _eventHandler.DiscordClientOnMessageReceived;
+            _discordClient.MessageReceived += _ => Task.FromResult(MessageCounter++);
         }
 
         public async Task Stop()
