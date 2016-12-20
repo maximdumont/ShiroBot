@@ -31,7 +31,7 @@ namespace ShiroBot.Commands
             {
                 // ReplyAsync is a method on ModuleBase
                 var userInfo = user ?? Context.Client.CurrentUser;
-                await ReplyAsync($"{userInfo.Username}#{userInfo.Discriminator}: {echo}");
+                await ReplyAsync($"{userInfo.Mention}: {echo}");
             }
             catch (Exception ex)
             {
@@ -40,22 +40,53 @@ namespace ShiroBot.Commands
             }
         }
 
+        //Testing changing bot(self) avatar.
         [Command("setavatar"), Summary("Sets bot avatar.")]
-        [Alias("sa")]
         public async Task SetAvatar(string img)
         {
             using (var http = new HttpClient())
             {
                 using (var sr = await http.GetStreamAsync(img))
                 {
-                    var imgStream = new MemoryStream();
-                    await sr.CopyToAsync(imgStream);
-                    imgStream.Position = 0;
-                    await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Optional<Image>(new Image(imgStream)));
+                    var memImg = new MemoryStream();
+                    await sr.CopyToAsync(memImg);
+                    memImg.Position = 0;
+                    await Context.Client.CurrentUser.ModifyAsync(x => x.Avatar = new Image(memImg));
                 }
             }
 
             await ReplyAsync("Successfully changed avatar.");
+        }
+
+        //Testing changing bot(self) game
+        [Command("setgame"), Summary("Sets bot game.")]
+        public async Task SetGame(string game)
+        {
+            try
+            {
+                DiscordSocketClient user = _discordClient;
+                await user.SetGame(game, "https://www.twitch.tv/shirobot_xyz", StreamType.Twitch);
+
+                await ReplyAsync("Successfully changed bot game status.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine((ex.ToString()));
+            }
+        }
+
+        //Grab user avatar
+        [Command("getavatar"), Summary("Grabs user avatar url.")]
+        public async Task GetAvatar(IUser user)
+        {
+            var currUser = user ?? Context.Client.CurrentUser;
+            var embed = new EmbedBuilder()
+                .WithAuthor(x => x.WithName(_discordClient.CurrentUser.Username).WithIconUrl(_discordClient.CurrentUser.AvatarUrl).WithUrl("https://shirobot.xyz/"))
+                .WithThumbnailUrl(currUser.AvatarUrl)
+                .WithColor(new Color(0,255,0))
+                .WithTitle("🙌 **__Avatar Found__** 🙌")
+                .AddField(x => x.WithName($"{currUser.Username}#`{currUser.Discriminator}` [{currUser.Id}]").WithValue($"<{currUser.AvatarUrl}>"));
+            await ReplyAsync(string.Empty, false, embed);
         }
 
         //Testing prune command
