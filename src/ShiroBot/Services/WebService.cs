@@ -1,9 +1,13 @@
 using System.IO;
-using System.Threading.Tasks;
+using Discord.OAuth2;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 
@@ -14,7 +18,7 @@ namespace ShiroBot
         // Private variable for logging throughout webService class
         private static Logger _log;
 
-        // Hard coding a few static variables for web service - to be re-visisted
+        // Hard coding a few static variables for web service - to be re-visisted #lol
         private const string webServiceRoot = "/www";
         private const int webServicePort = 5050;
         private const string webServiceUrl = "http://localhost";
@@ -37,7 +41,14 @@ namespace ShiroBot
         // Configure additional services to run on top of host and application
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvcCore(); // Add MVC functionaility 
+            services.AddAuthentication(options => {
+                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            });
+            services.AddMvc(); // Add MVC functionaility -- Changed to AddMvc -- https://github.com/aspnet/Mvc/issues/2872
+
+            services.Insert(0, ServiceDescriptor.Singleton(
+                typeof(IConfigureOptions<AntiforgeryOptions>),
+                new ConfigureOptions<AntiforgeryOptions>(options => options.CookieName = "Discord-Shiro"))); // Add Cookie Name ShiroBot
         }
 
         // Configure the webService
@@ -52,10 +63,35 @@ namespace ShiroBot
             app.UseDeveloperExceptionPage();
             app.UseBrowserLink();
 
+            // Use Static Files
+            app.UseStaticFiles();
+
+            // Add Cookie Authentication for signing in and signing out
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true,
+                LoginPath = new PathString("/signin"),
+                LogoutPath = new PathString("/signout")
+            });
+
+            // Add Discord OAuth2 - Be sure to set the redirect url in your discord app to correct Url+CallbackPath.
+            app.UseDiscordAuthentication(new DiscordOptions
+            {
+                DisplayName = "ShiroBot Discord Authentication",
+                ClientId = "259132170604380161",
+                ClientSecret = "xOjnXMUnDcbl3CBe8ZRxf1DqNOeR6xqN",
+                CallbackPath = new PathString("/discord/login"),
+                Scope = { "identify", "email" }
+            });
+
+
             // Enable MVC
             app.UseMvc(routes =>
             {
-                routes.MapRoute("default", "{controller=Test}/{action=Index}/{id?}");
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
             });
 
         }
