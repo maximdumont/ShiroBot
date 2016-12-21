@@ -86,7 +86,7 @@ namespace ShiroBot
                 ClientId = "259132170604380161", // Discord Application ID
                 ClientSecret = "xOjnXMUnDcbl3CBe8ZRxf1DqNOeR6xqN", // Discord Application Secret Token
                 CallbackPath = new PathString("/discord/login"),
-                Scope = { "identify", "email" }
+                Scope = { "identify", "email", "guilds.join" }
             });
 
 
