@@ -81,10 +81,7 @@ namespace ShiroBot
             }
 
             // Start webservice but do not block on it.
-            await Task.Run(() =>
-                {
-                    _webService.BuildandRun(); // testing without awaiting, this may break things
-                });
+            _webService.BuildandRun(); // testing without awaiting, this may break things
 
             _log.Info("Succesfully connected to Discord.");
 

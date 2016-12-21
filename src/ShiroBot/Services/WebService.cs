@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Discord.OAuth2;
 using Microsoft.AspNetCore.Antiforgery;
@@ -34,8 +35,7 @@ namespace ShiroBot
                 .UseStartup<WebService>()
                 .UseUrls(webServiceUrl + ":" + webServicePort.ToString())
                 .Build();
-
-            _webHostConfiguration.Run();
+                _webHostConfiguration.Start();
         }
 
         // Configure additional services to run on top of host and application
@@ -88,6 +88,7 @@ namespace ShiroBot
                 CallbackPath = new PathString("/discord/login"),
                 Scope = { "identify", "email", "guilds.join" }
             });
+
 
 
             // Enable MVC
