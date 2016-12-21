@@ -9,6 +9,7 @@ namespace ShiroBot.Services.WebService.Controllers
         private static Logger Logger = LogManager.GetCurrentClassLogger();
 
         // GET: ~/
+        // View() will create a result from www/Views/Home/Index.cshtml
         [Route("")]
         [HttpGet("~/")]
         public ActionResult Index() => View();

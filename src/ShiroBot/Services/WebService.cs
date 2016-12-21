@@ -41,14 +41,18 @@ namespace ShiroBot
         // Configure additional services to run on top of host and application
         public void ConfigureServices(IServiceCollection services)
         {
+            //Add Authentication Service
             services.AddAuthentication(options => {
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             });
-            services.AddMvc(); // Add MVC functionaility -- Changed to AddMvc -- https://github.com/aspnet/Mvc/issues/2872
 
+            // Add MVC functionaility -- Changed to AddMvc -- https://github.com/aspnet/Mvc/issues/2872
+            services.AddMvc();
+
+            // Insert a antiforgery token system with the cookie name "Discord-Shiro"
             services.Insert(0, ServiceDescriptor.Singleton(
                 typeof(IConfigureOptions<AntiforgeryOptions>),
-                new ConfigureOptions<AntiforgeryOptions>(options => options.CookieName = "Discord-Shiro"))); // Add Cookie Name ShiroBot
+                new ConfigureOptions<AntiforgeryOptions>(options => options.CookieName = "Discord-Shiro")));
         }
 
         // Configure the webService
