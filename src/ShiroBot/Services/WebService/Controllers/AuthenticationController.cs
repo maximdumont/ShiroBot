@@ -3,17 +3,9 @@
  * See https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers
  * for more information concerning the license and the contributors participating to this project.
  */
-
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using NLog;
 using ShiroBot.Services.WebService.Extensions;
 
 namespace ShiroBot.Services.WebService.Controllers

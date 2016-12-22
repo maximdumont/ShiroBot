@@ -1,7 +1,4 @@
-﻿using System.Runtime.InteropServices.ComTypes;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace ShiroBot.Services.WebService.Controllers
