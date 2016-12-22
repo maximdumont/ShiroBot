@@ -1,8 +1,12 @@
 using System;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 using Discord.OAuth2;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
+using Newtonsoft.Json;
+using ShiroBot.Services.WebService.Models;
 
 namespace ShiroBot
 {
@@ -41,7 +47,7 @@ namespace ShiroBot
         // Configure additional services to run on top of host and application
         public void ConfigureServices(IServiceCollection services)
         {
-            //Add Authentication Service
+            // Add Authentication Service
             services.AddAuthentication(options => {
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             });
@@ -70,7 +76,9 @@ namespace ShiroBot
             // Use Static Files
             app.UseStaticFiles();
 
-            // Add Cookie Authentication for signing in and signing out
+            // Enable the application to use a cookie to store information for the signed in user
+            // and to use a cookie to temporarily store information about a user logging in with a third party login provider
+            // Configure the sign in and sign out cookie
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
                 AutomaticAuthenticate = true,
@@ -79,6 +87,7 @@ namespace ShiroBot
                 LogoutPath = new PathString("/signout")
             });
 
+
             // Add Discord OAuth2 - Be sure to set the redirect url in your discord app to correct Url+CallbackPath.
             app.UseDiscordAuthentication(new DiscordOptions
             {
@@ -86,10 +95,50 @@ namespace ShiroBot
                 ClientId = "259132170604380161", // Discord Application ID
                 ClientSecret = "xOjnXMUnDcbl3CBe8ZRxf1DqNOeR6xqN", // Discord Application Secret Token
                 CallbackPath = new PathString("/discord/login"),
-                Scope = { "identify", "email", "guilds.join" }
+                Scope = { "identify", "guilds" }, // Scopes identify and guilds
+                SaveTokens = true, // Save the token "await Context.Authentication.GetTokenAsync()" (If we happen to want to grab token session) in .cshtml for example
+                Events = new OAuthEvents
+                {
+                    OnCreatingTicket = async context =>
+                    {
+                        // Create user request to /users/@me/guilds - Lists selfuser's guild list. Just inspect <GuildsModel>.
+                        HttpRequestMessage userRequest = new HttpRequestMessage(HttpMethod.Get, "https://discordapp.com/api/users/@me/guilds");
+                        // Add Header "Authorization: Bearer TOKEN"
+                        userRequest.Headers.Add("Authorization", "Bearer " + context.AccessToken);
+                        // Accept Type "application/json"
+                        userRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        // Sends a HTTP request asynchronously.
+                        HttpResponseMessage userResponse = await context.Backchannel.SendAsync(userRequest, context.HttpContext.RequestAborted);
+                        // Make sure we get a success on our request, otherwise fail.
+                        userResponse.EnsureSuccessStatusCode();
+                        // Read the response after our request is successful to string.
+                        var text = await userResponse.Content.ReadAsStringAsync();
+                        // Deserialize the JSON into a readable obj.
+                        var user = JsonConvert.DeserializeObject<GuildsModel[]>(text);
+
+                        // Creates a new ClaimsIdentity to add to our claims list.
+                        var identity = new ClaimsIdentity(
+                            context.Identity.AuthenticationType,
+                            ClaimsIdentity.DefaultNameClaimType,
+                            ClaimsIdentity.DefaultRoleClaimType);
+
+                        // Since our guilds is an array of guild objects we need to loop it and add the incrementing number on the claim type.
+                        for (int i = 0; i < user.Length; i++)
+                        {
+                            var identifier = user[i].id;
+                            if (!string.IsNullOrEmpty(identifier))
+                            {
+                                context.Identity.AddClaim(new Claim(
+                                    String.Format("urn:discord:guild:{0}:id",i), identifier,
+                                    ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            }
+                        }
+
+                        // Add the ClaimsIdentity we created to our main identity.
+                        context.Identity.Actor = identity;
+                    }
+                }
             });
-
-
 
             // Enable MVC
             app.UseMvc(routes =>
@@ -98,7 +147,6 @@ namespace ShiroBot
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-
         }
     }
 }
