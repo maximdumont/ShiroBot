@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace ShiroBot.Services.WebService.Models
 {
-    public class GuildsModel
+    public class Guilds
     {
         public bool owner { get; set; }
         public int permissions { get; set; }

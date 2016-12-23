@@ -114,7 +114,7 @@ namespace ShiroBot
                         // Read the response after our request is successful to string.
                         var text = await userResponse.Content.ReadAsStringAsync();
                         // Deserialize the JSON into a readable obj.
-                        var user = JsonConvert.DeserializeObject<GuildsModel[]>(text);
+                        var user = JsonConvert.DeserializeObject<Guilds[]>(text);
 
                         // Creates a new ClaimsIdentity to add to our claims list.
                         var identity = new ClaimsIdentity(
@@ -129,7 +129,21 @@ namespace ShiroBot
                             if (!string.IsNullOrEmpty(identifier))
                             {
                                 context.Identity.AddClaim(new Claim(
-                                    String.Format("urn:discord:guild:{0}:id",i), identifier,
+                                    String.Format("urn:discord:guild:id:{0}", i), identifier,
+                                    ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            }
+                            var avatar = user[i].icon;
+                            if (!string.IsNullOrEmpty(avatar))
+                            {
+                                context.Identity.AddClaim(new Claim(
+                                    String.Format("urn:discord:guild:avatar:{0}", i), avatar,
+                                    ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            }
+                            var permissions = user[i].permissions;
+                            if (!string.IsNullOrEmpty(permissions.ToString()))
+                            {
+                                context.Identity.AddClaim(new Claim(
+                                    String.Format("urn:discord:guild:permissions:{0}", i), permissions.ToString(),
                                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
                             }
                         }
