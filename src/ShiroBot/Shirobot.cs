@@ -56,7 +56,7 @@ namespace ShiroBot
             {
                 // Try to connect to the discord network
                 _log.Debug("Attempting to connect to Discord.");
-                await _discordClient.LoginAsync(Discord.TokenType.Bot, _configuration.GetValue<string>("discord_client:connection_token", "CHANGE_TOKEN"));
+                await _discordClient.LoginAsync(Discord.TokenType.Bot, _configuration.GetValue<string>("discord_client:connection_token"));
                 await _discordClient.ConnectAsync();
             }
             catch (System.Exception ex)
@@ -75,6 +75,9 @@ namespace ShiroBot
                     System.Environment.Exit(-1);
                 }
             }
+
+            // Start webservice but do not block on it.
+            //await _webService.BuildandRun(); // testing without awaiting, this may break things
 
             // Before logging that we are connected, check the state first
             if (_discordClient.ConnectionState == Discord.ConnectionState.Connected)

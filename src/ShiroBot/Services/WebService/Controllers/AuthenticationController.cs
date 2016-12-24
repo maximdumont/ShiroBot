@@ -3,17 +3,16 @@
  * See https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers
  * for more information concerning the license and the contributors participating to this project.
  */
-
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using NLog;
 using ShiroBot.Services.WebService.Extensions;
 
 namespace ShiroBot.Services.WebService.Controllers
 {
     public class AuthenticationController : Controller
     {
+
         [HttpGet("~/signin")]
         public IActionResult SignIn() => View("SignIn", HttpContext.GetExternalProviders());
 

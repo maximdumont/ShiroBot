@@ -254,3 +254,4 @@ Private/
 www/
 bin/
 obj/
+*.dll
