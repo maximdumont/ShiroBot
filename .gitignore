@@ -253,5 +253,6 @@ src/*/Configuration/
 Private/
 www/
 bin/
+.idea/
 obj/
 *.dll
