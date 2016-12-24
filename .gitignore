@@ -252,3 +252,5 @@ ModelManifest.xml
 src/*/Configuration/
 Private/
 www/
+bin/
+obj/

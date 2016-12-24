@@ -34,15 +34,15 @@ namespace ShiroBot
                 .UseStartup<WebService>()
                 .UseUrls(webServiceUrl + ":" + webServicePort.ToString())
                 .Build();
-
-            _webHostConfiguration.Run();
+            _webHostConfiguration.Start();
         }
 
         // Configure additional services to run on top of host and application
         public void ConfigureServices(IServiceCollection services)
         {
             //Add Authentication Service
-            services.AddAuthentication(options => {
+            services.AddAuthentication(options =>
+            {
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             });
 
