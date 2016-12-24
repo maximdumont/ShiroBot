@@ -93,7 +93,7 @@ namespace ShiroBot
             {
                 DisplayName = "ShiroBot Discord Authentication",
                 ClientId = "259132170604380161", // Discord Application ID
-                ClientSecret = "xOjnXMUnDcbl3CBe8ZRxf1DqNOeR6xqN", // Discord Application Secret Token
+                ClientSecret = "3tu-ooS5RV3uisXFy4zVnmfguQJVBujq", // Discord Application Secret Token
                 CallbackPath = new PathString("/discord/login"),
                 Scope = { "identify", "guilds" }, // Scopes identify and guilds
                 SaveTokens = true, // Save the token "await Context.Authentication.GetTokenAsync()" (If we happen to want to grab token session) in .cshtml for example
@@ -144,6 +144,13 @@ namespace ShiroBot
                             {
                                 context.Identity.AddClaim(new Claim(
                                     String.Format("urn:discord:guild:permissions:{0}", i), permissions.ToString(),
+                                    ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                            }
+                            var guildname = user[i].name;
+                            if (!string.IsNullOrEmpty(guildname))
+                            {
+                                context.Identity.AddClaim(new Claim(
+                                    String.Format("urn:discord:guild:name:{0}", i), guildname,
                                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
                             }
                         }
