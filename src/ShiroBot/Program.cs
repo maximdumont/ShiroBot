@@ -9,32 +9,32 @@ namespace ShiroBot
     public class Program
     {
         // Internal reference: bot information
-        public const string botName = "ShiroBot";
-        public const string botVersion = "0.0.1b";
-        public const string botSupportUrl = "https://github.com/keyphact/ShiroBot/issues";
+        public const string BotName = "ShiroBot";
+        public const string BotVersion = "0.0.1b";
+        public const string BotSupportUrl = "https://github.com/keyphact/ShiroBot/issues";
 
         // General ShiroBot configuration
-        private static IConfigurationRoot _configuration;
+        private static IConfigurationRoot s_configuration;
 
         // Needed for thread control
-        private static readonly ManualResetEvent mre = new ManualResetEvent(false);
+        private static readonly ManualResetEvent s_mre = new ManualResetEvent(false);
 
         // Main application
         public static void Main(string[] args)
         {
             // Configure console
             // On ctrl-c unblock threads via (mre.Set) and continue to shutdown bot
-            Console.Title = botName + " - " + botVersion;
+            Console.Title = BotName + " - " + BotVersion;
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
-                mre.Set();
+                s_mre.Set();
                 eventArgs.Cancel = true;
             };
 
             // Load and build configuration into static variable to pass to ShiroBot
             try
             {
-                _configuration = new ConfigurationBuilder()
+                s_configuration = new ConfigurationBuilder()
                                     .SetBasePath(Directory.GetCurrentDirectory())
                                     .AddJsonFile("Configuration/ShiroBot.json", optional: false, reloadOnChange: true)
                                     .Build();
@@ -46,21 +46,21 @@ namespace ShiroBot
             }
 
             // Instantiate a new ShiroBot
-            var ShiroBot = new ShiroBot(_configuration);
+            var shiroBot = new ShiroBot(s_configuration);
 
             // Run ShiroBot
             Task.Run(async () =>
             {
-                await ShiroBot.RunAsync();
+                await shiroBot.RunAsync();
             });
 
             // Block all threads here
-            mre.WaitOne();
+            s_mre.WaitOne();
 
             // Shutdown ShiroBot, once mre has been set
             Task.Run(async () =>
             {
-                await ShiroBot.StopAsync();
+                await shiroBot.StopAsync();
             });
         }
     }

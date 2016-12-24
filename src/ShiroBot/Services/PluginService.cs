@@ -13,13 +13,13 @@ namespace ShiroBot
     public class PluginService
     {
         // Private variable for logging in this class
-        private static Logger _log;
+        private static Logger s_log;
 
         // Store loaded plugins into a dictioanry 
         private Dictionary<String, IPlugin> _pluginRegistory;
 
         // General ShiroBot configuration
-        public static IConfigurationRoot _configuration;
+        public static IConfigurationRoot Configuration;
 
         // For discord client
         private readonly DiscordSocketClient _discordClient;
@@ -27,21 +27,20 @@ namespace ShiroBot
         public PluginService(IConfigurationRoot configuration, DiscordSocketClient discordClient)
         {
             // Copy configuration to class static variable and setup logging
-            _configuration = configuration;
+            Configuration = configuration;
             _discordClient = discordClient;
-            _log = LogManager.GetCurrentClassLogger();
+            s_log = LogManager.GetCurrentClassLogger();
         }
 
         // needs a function to constantly watch plugins 
 
         // Load an individual plugin via its name 
-        public void loadPlugin(string pluginName)
+        public void LoadPlugin(string pluginName)
         {
-
             // some code will need to plugin to events from here.
 
             pluginName = pluginName.UppercaseFirst();
-            _log.Info("Attempting to load plugin: " + pluginName);
+            s_log.Info("Attempting to load plugin: " + pluginName);
 
             var pluginPath = Path.Combine(Directory.GetCurrentDirectory(), "Plugins", pluginName + ".dll");
             if (File.Exists(pluginPath))
@@ -59,7 +58,7 @@ namespace ShiroBot
                 }
                 catch (System.Exception ex)
                 {
-                    _log.Error("There was an issue trying to load plugin: " + pluginName + ". Exception thrown was: " + ex.ToString());
+                    s_log.Error("There was an issue trying to load plugin: " + pluginName + ". Exception thrown was: " + ex.ToString());
                     return;
                 }
 
@@ -68,16 +67,14 @@ namespace ShiroBot
             }
             else
             {
-                _log.Error("Trying to load plugin: " + pluginName + " failed.");
+                s_log.Error("Trying to load plugin: " + pluginName + " failed.");
             }
         }
 
-        public void loadAvailablePlugins()
+        public void LoadAvailablePlugins()
         {
             var pluginDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "/Plugins/");
             string[] dirs = Directory.GetFiles(pluginDirectoryPath, "*.dll");
         }
     }
-
-
 }

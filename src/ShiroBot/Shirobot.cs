@@ -11,14 +11,14 @@ namespace ShiroBot
     public class ShiroBot
     {
         // Private variable for logging in this class
-        private static Logger _log;
+        private static Logger s_log;
 
         // General ShiroBot configuration
-        private static IConfigurationRoot _configuration;
+        private static IConfigurationRoot s_configuration;
 
         // For ShiroBot internal services
-        private static WebService _webService;
-        private static PluginService _pluginService;
+        private static WebService s_webService;
+        private static PluginService s_pluginService;
 
         // For discord client
         private readonly DiscordSocketClient _discordClient;
@@ -27,7 +27,7 @@ namespace ShiroBot
         public ShiroBot(IConfigurationRoot configuration)
         {
             // Copy configuration to internal static variable
-            _configuration = configuration;
+            s_configuration = configuration;
 
             // Setup logging
             _setupLogging();
@@ -35,11 +35,11 @@ namespace ShiroBot
             // Instantiate a new discord client with configuration
             _discordClient = new DiscordSocketClient(new DiscordSocketConfig
             {
-                ConnectionTimeout = _configuration.GetValue<int>("discord_client:connection_timeout", 10000),
-                AudioMode = (AudioMode)_configuration.GetValue<int>("discord_client:audio_mode", 0),
-                MessageCacheSize = _configuration.GetValue<int>("discord_client:message_cache_size", 100),
-                DownloadUsersOnGuildAvailable = _configuration.GetValue<bool>("discord_client:download_users_on_guild_available", true),
-                LogLevel = (Discord.LogSeverity)_configuration.GetValue<int>("discord_client:log_level", 4),
+                ConnectionTimeout = s_configuration.GetValue<int>("discord_client:connection_timeout", 10000),
+                AudioMode = (AudioMode)s_configuration.GetValue<int>("discord_client:audio_mode", 0),
+                MessageCacheSize = s_configuration.GetValue<int>("discord_client:message_cache_size", 100),
+                DownloadUsersOnGuildAvailable = s_configuration.GetValue<bool>("discord_client:download_users_on_guild_available", true),
+                LogLevel = (Discord.LogSeverity)s_configuration.GetValue<int>("discord_client:log_level", 4),
                 ShardId = 1, // Hard coding this as stand-alone ShiroBot does not need more than one shard
                 TotalShards = 1, // Hard coding this as stand-alone ShiroBot does not need more than one shard
             });
@@ -49,20 +49,20 @@ namespace ShiroBot
         public async Task RunAsync()
         {
             // Grab a logger
-            _log = LogManager.GetCurrentClassLogger();
-            _log.Info(Program.botName + " v" + Program.botVersion + " is starting up...");
+            s_log = LogManager.GetCurrentClassLogger();
+            s_log.Info(Program.BotName + " v" + Program.BotVersion + " is starting up...");
 
             try
             {
                 // Try to connect to the discord network
-                _log.Debug("Attempting to connect to Discord.");
-                await _discordClient.LoginAsync(Discord.TokenType.Bot, _configuration.GetValue<string>("discord_client:connection_token"));
+                s_log.Debug("Attempting to connect to Discord.");
+                await _discordClient.LoginAsync(Discord.TokenType.Bot, s_configuration.GetValue<string>("discord_client:connection_token"));
                 await _discordClient.ConnectAsync();
             }
             catch (System.Exception ex)
             {
                 // An exception was thrown, catch it and attempt to cleanly stop the bot, then exit
-                _log.Fatal("An exception was thrown whilst trying to connect to Discord. Exception thrown was: {0}", ex.ToString());
+                s_log.Fatal("An exception was thrown whilst trying to connect to Discord. Exception thrown was: {0}", ex.ToString());
                 await StopAsync();
                 System.Environment.Exit(-1);
             }
@@ -70,8 +70,8 @@ namespace ShiroBot
             {
                 if (_discordClient.ConnectionState == Discord.ConnectionState.Disconnected)
                 {
-                    _log.Fatal("No exception was thrown however, a connection could not be made to the Discord network.");
-                    _log.Fatal("Please report this as a bug here: " + Program.botSupportUrl);
+                    s_log.Fatal("No exception was thrown however, a connection could not be made to the Discord network.");
+                    s_log.Fatal("Please report this as a bug here: " + Program.BotSupportUrl);
                     System.Environment.Exit(-1);
                 }
             }
@@ -82,12 +82,12 @@ namespace ShiroBot
             // Before logging that we are connected, check the state first
             if (_discordClient.ConnectionState == Discord.ConnectionState.Connected)
             {
-                _log.Info("Succesfully connected to the Discord network.");
+                s_log.Info("Succesfully connected to the Discord network.");
             }
 
             // Create a new instance of pluginservice and load some plugins
-            _pluginService = new PluginService(_configuration, _discordClient);
-            _pluginService.loadPlugin("greeter");
+            s_pluginService = new PluginService(s_configuration, _discordClient);
+            s_pluginService.LoadPlugin("greeter");
 
             //_pluginService.loadAvailablePlugins(); -- implement a directory walk for *.dll files
 
@@ -115,7 +115,7 @@ namespace ShiroBot
         // Stop the bot
         public async Task StopAsync()
         {
-            _log.Debug("Attempting to disconnect from Discord.");
+            s_log.Debug("Attempting to disconnect from Discord.");
             await _discordClient.DisconnectAsync();
             // await ShiroBot.PluginService.StopAsync();
             // await ShiroBot.WebService.StopAsync();
@@ -144,6 +144,5 @@ namespace ShiroBot
                 System.Environment.Exit(-1);
             }
         }
-
     }
 }
