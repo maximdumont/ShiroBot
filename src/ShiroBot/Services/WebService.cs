@@ -23,25 +23,25 @@ namespace ShiroBot
     public class WebService
     {
         // Private variable for logging throughout webService class
-        private static Logger _log;
+        private static Logger s_log;
 
         // Hard coding a few static variables for web service - to be re-visisted #lol
-        private const string webServiceRoot = "/www";
-        private const int webServicePort = 5050;
-        private const string webServiceUrl = "http://localhost";
+        private const string WebServiceRoot = "/www";
+        private const int WebServicePort = 5050;
+        private const string WebServiceUrl = "http://localhost";
 
         // Configure web host
         public void BuildandRun()
         {
             // Save webhost configuration to deploy and run later
-            var _webHostConfiguration = new WebHostBuilder()
-                .UseContentRoot(Directory.GetCurrentDirectory() + webServiceRoot)
-                .UseWebRoot(Directory.GetCurrentDirectory() + webServiceRoot)
+            var webHostConfiguration = new WebHostBuilder()
+                .UseContentRoot(Directory.GetCurrentDirectory() + WebServiceRoot)
+                .UseWebRoot(Directory.GetCurrentDirectory() + WebServiceRoot)
                 .UseKestrel() // Use this and run the bot behind nginx
                 .UseStartup<WebService>()
-                .UseUrls(webServiceUrl + ":" + webServicePort.ToString())
+                .UseUrls(WebServiceUrl + ":" + WebServicePort.ToString())
                 .Build();
-            _webHostConfiguration.Start();
+            webHostConfiguration.Start();
         }
 
         // Configure additional services to run on top of host and application
@@ -130,28 +130,28 @@ namespace ShiroBot
                         // Since our guilds is an array of guild objects we need to loop it and add the incrementing number on the claim type.
                         for (int i = 0; i < user.Length; i++)
                         {
-                            var identifier = user[i].id;
+                            var identifier = user[i].Id;
                             if (!string.IsNullOrEmpty(identifier))
                             {
                                 context.Identity.AddClaim(new Claim(
                                     String.Format("urn:discord:guild:id:{0}", i), identifier,
                                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
                             }
-                            var avatar = user[i].icon;
+                            var avatar = user[i].Icon;
                             if (!string.IsNullOrEmpty(avatar))
                             {
                                 context.Identity.AddClaim(new Claim(
                                     String.Format("urn:discord:guild:avatar:{0}", i), avatar,
                                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
                             }
-                            var permissions = user[i].permissions;
+                            var permissions = user[i].Permissions;
                             if (!string.IsNullOrEmpty(permissions.ToString()))
                             {
                                 context.Identity.AddClaim(new Claim(
                                     String.Format("urn:discord:guild:permissions:{0}", i), permissions.ToString(),
                                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
                             }
-                            var guildname = user[i].name;
+                            var guildname = user[i].Name;
                             if (!string.IsNullOrEmpty(guildname))
                             {
                                 context.Identity.AddClaim(new Claim(

@@ -1,3 +1,4 @@
+
 namespace ShiroBot
 {
     public static class StringExtensions

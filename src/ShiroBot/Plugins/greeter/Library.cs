@@ -5,16 +5,16 @@ namespace ShiroBot.Plugins
 {
     public class Greeter : IPlugin
     {
-        public DiscordSocketClient _discordClient { get; set; }
-        static Logger _log { get; set; }
+        public DiscordSocketClient DiscordClient { get; set; }
+        private static Logger Log { get; set; }
 
         public void Init(object[] objectWrappers)
         {
             // load discord client
-            _discordClient = (DiscordSocketClient)objectWrappers[0];
-            _log = LogManager.GetCurrentClassLogger();
+            DiscordClient = (DiscordSocketClient)objectWrappers[0];
+            Log = LogManager.GetCurrentClassLogger();
 
-            _log.Info("plugin loaded and was init`d");
+            Log.Info("plugin loaded and was init`d");
         }
     }
 }

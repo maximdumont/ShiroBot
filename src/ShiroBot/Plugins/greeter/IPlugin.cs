@@ -4,7 +4,7 @@ namespace ShiroBot.Plugins
 {
     public interface IPlugin
     {
-        DiscordSocketClient _discordClient { get; set; }
+        DiscordSocketClient DiscordClient { get; set; }
         void Init(object[] objectWrappers);
     }
 }
