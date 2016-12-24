@@ -16,6 +16,9 @@ namespace ShiroBot.Services.WebService.Controllers
         [HttpGet("~/signin")]
         public IActionResult SignIn() => View("SignIn", HttpContext.GetExternalProviders());
 
+        [HttpGet("~/dashboard")]
+        public IActionResult Guilds() => View("Dashboard", HttpContext.GetExternalProviders());
+
         [HttpPost("~/signin")]
         public IActionResult SignIn([FromForm] string provider)
         {
