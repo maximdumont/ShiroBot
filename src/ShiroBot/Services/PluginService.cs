@@ -40,16 +40,16 @@ namespace ShiroBot
             // some code will need to plugin to events from here.
 
             pluginName = pluginName.UppercaseFirst();
-            s_log.Info("Attempting to load plugin: " + pluginName);
+            s_log.Info($"Attempting to load plugin: {pluginName}");
 
-            var pluginPath = Path.Combine(Directory.GetCurrentDirectory(), "Plugins", pluginName + ".dll");
+            var pluginPath = Path.Combine(Directory.GetCurrentDirectory(), "Plugins", $"{pluginName}.dll");
             if (File.Exists(pluginPath))
             {
                 try
                 {
                     var myPlugin = AssemblyLoadContext.Default.LoadFromAssemblyPath(pluginPath);
 
-                    var myClass = myPlugin.GetType("ShiroBot.Plugins." + pluginName);
+                    var myClass = myPlugin.GetType($"ShiroBot.Plugins.{pluginName}");
                     var myClassInstance = Activator.CreateInstance(myClass);
 
                     var myMethod = myClass.GetMethod("Init");
@@ -58,7 +58,7 @@ namespace ShiroBot
                 }
                 catch (System.Exception ex)
                 {
-                    s_log.Error("There was an issue trying to load plugin: " + pluginName + ". Exception thrown was: " + ex.ToString());
+                    s_log.Error($"There was an issue trying to load plugin: {pluginName}. Exception thrown was: {ex}");
                     return;
                 }
 
@@ -67,7 +67,7 @@ namespace ShiroBot
             }
             else
             {
-                s_log.Error("Trying to load plugin: " + pluginName + " failed.");
+                s_log.Error($"Trying to load plugin: {pluginName} failed.");
             }
         }
 

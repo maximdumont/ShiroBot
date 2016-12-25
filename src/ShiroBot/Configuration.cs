@@ -12,7 +12,7 @@ namespace ShiroBot
 
         // Variable used to show when a configuration load has failed due to missing file or bad configuration
         [JsonProperty("bad_configuration", Required = Required.Default)]
-        public bool HasBadConfiguration { get; set; }
+        public bool HasBadConfiguration { get; private set; }
 
         // Properties to de/serialize to and from JSON
         [JsonProperty("bot_token", Required = Required.DisallowNull)]
@@ -33,17 +33,21 @@ namespace ShiroBot
         // Load configuration from configuration.json and if it doesn't exist create a dummy one
         public Configuration LoadConfiguration()
         {
-            var configurationFilePath = Path.Combine(Directory.GetCurrentDirectory(), ConfigurationDirectoryName, "ShiroBot.json");
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), ConfigurationDirectoryName);
+            var configurationFilePath = Path.Combine(directoryPath, "ShiroBot.json");
 
             // Make sure the configuration directory exists
             try
             {
-                DirectoryInfo di = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), ConfigurationDirectoryName));
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
             }
             catch (System.Exception e)
             {
                 Console.WriteLine("Creating configuration directory failed, exception thrown was: {0}", e.ToString());
-                this.HasBadConfiguration = true;
+                HasBadConfiguration = true;
                 return this;
             }
 
@@ -51,11 +55,11 @@ namespace ShiroBot
             if (!File.Exists(configurationFilePath))
             {
                 File.WriteAllText(configurationFilePath, JsonConvert.SerializeObject(new Configuration(), Formatting.Indented));
-                Console.WriteLine("No configuration file exists for " + Program.BotName + ".");
+                Console.WriteLine($"No configuration file exists for {Program.BotName}.");
                 Console.WriteLine("A blank configuration file has been created for you, please modify it.");
                 Console.WriteLine($"Path: {configurationFilePath}");
 
-                this.HasBadConfiguration = true;
+                HasBadConfiguration = true;
                 return this;
             }
 
