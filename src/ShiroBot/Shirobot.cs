@@ -50,7 +50,7 @@ namespace ShiroBot
         {
             // Grab a logger
             s_log = LogManager.GetCurrentClassLogger();
-            s_log.Info(Program.BotName + " v" + Program.BotVersion + " is starting up...");
+            s_log.Info($"{Program.BotName} v{Program.BotVersion} is starting up...");
 
             try
             {
@@ -62,7 +62,7 @@ namespace ShiroBot
             catch (System.Exception ex)
             {
                 // An exception was thrown, catch it and attempt to cleanly stop the bot, then exit
-                s_log.Fatal("An exception was thrown whilst trying to connect to Discord. Exception thrown was: {0}", ex.ToString());
+                s_log.Fatal(ex, $"An exception was thrown whilst trying to connect to Discord. Exception thrown was: {0}");
                 await StopAsync();
                 System.Environment.Exit(-1);
             }
@@ -140,7 +140,7 @@ namespace ShiroBot
             }
             catch (System.Exception ex)
             {
-                System.Console.WriteLine("The following exception was thrown when trying to setup logger: " + ex.ToString());
+                System.Console.WriteLine($"The following exception was thrown when trying to setup logger: {ex}");
                 System.Environment.Exit(-1);
             }
         }

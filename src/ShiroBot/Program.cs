@@ -24,7 +24,7 @@ namespace ShiroBot
         {
             // Configure console
             // On ctrl-c unblock threads via (mre.Set) and continue to shutdown bot
-            Console.Title = BotName + " - " + BotVersion;
+            Console.Title = $"{BotName} - {BotVersion}";
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 s_mre.Set();
@@ -45,23 +45,22 @@ namespace ShiroBot
                 System.Environment.Exit(-1);
             }
 
+            RunBot().GetAwaiter().GetResult();
+        }
+
+        private static async Task RunBot()
+        {
             // Instantiate a new ShiroBot
             var shiroBot = new ShiroBot(s_configuration);
 
             // Run ShiroBot
-            Task.Run(async () =>
-            {
-                await shiroBot.RunAsync();
-            });
+            await shiroBot.RunAsync();
 
             // Block all threads here
             s_mre.WaitOne();
 
             // Shutdown ShiroBot, once mre has been set
-            Task.Run(async () =>
-            {
-                await shiroBot.StopAsync();
-            });
+            await shiroBot.StopAsync();
         }
     }
 }
