@@ -20,8 +20,11 @@ namespace ShiroBot
         private static readonly ManualResetEvent s_mre = new ManualResetEvent(false);
 
         // Main application
+        // http://blog.stephencleary.com/2014/12/a-tour-of-task-part-6-results.html
         public static void Main(string[] args)
         {
+            // time to copy a line or two from discord.net bot example documentation
+
             // Configure console
             // On ctrl-c unblock threads via (mre.Set) and continue to shutdown bot
             Console.Title = $"{BotName} - {BotVersion}";
