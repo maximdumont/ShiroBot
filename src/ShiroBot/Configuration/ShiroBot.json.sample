@@ -1,0 +1,15 @@
+{
+  "discord_client": {
+    // Audio mode, not documented (AS EXPECTED, THOSE JERKS) believed to be something to do with duplexing
+    // Disabling for now as we don't use audio at all with ShiroBot yet.
+    "audio_mode": 0, // Disabled = 0, Outgoing = 1, Incoming = 2, Both = 3 
+    "message_cache_size": 100, // Caches 100 messages per channel, if we run into memory issues tweak it
+    "download_users_on_guild_available": true, // Self-explantory  
+    "log_level": 3, // Higher = more verbosity // An explicit cast because configuration file won't know about LogSeverity
+    "connection_timeout": 10000, // in miliseconds
+    "connection_token": "" // Client secret token from discord
+  },
+  "web_service": {
+    "bot_url": "http://localhost" // What URL the web service should listen on
+  }
+}

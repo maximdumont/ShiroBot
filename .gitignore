@@ -249,10 +249,13 @@ ModelManifest.xml
 
 
 # Custom Gitignore Paths
-src/*/Configuration/
 Private/
 www/
 bin/
 .idea/
 obj/
 *.dll
+
+# Disallow genuine configuration files
+src/*/Configuration/*.json
+src/*/Configuration/*.xml
