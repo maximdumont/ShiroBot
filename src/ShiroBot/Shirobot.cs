@@ -1,83 +1,89 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Discord.Audio;
 using Discord.WebSocket;
 using NLog;
-using NLog.Config;
-using NLog.Targets;
+using ShiroBot.Configuration;
+using ShiroBot.Plugins;
 
 namespace ShiroBot
 {
     public class ShiroBot
     {
+        // Internal bot information
+        public static string s_BotName = "ShiroBot";
+        public static string s_BotVersion = "0.0.2";
+        public static string s_BotSupportUrl = "https://github.com/keyphact/ShiroBot/issues";
+
         // Private variable for logging in this class
-        private static Logger s_log;
+        private static Logger s_log = LogManager.GetCurrentClassLogger();
 
-        // General ShiroBot configuration
-        private static IConfigurationRoot s_configuration;
+        // ShiroBot Plugin Manager and Loader (with 400% more sugoiness)
+        private static PluginManager s_RootPluginManager;
+        private static PluginLoader s_RootPluginLoader;
 
-        // For ShiroBot internal services
-        private static WebService s_webService;
-        private static PluginService s_pluginService;
+        // Booleans to store ShiroBot state
+        public static bool IsStopping = false;
+        public static bool Stopped = true;
 
         // For discord client
         private readonly DiscordSocketClient _discordClient;
 
         // Setup ShiroBot to run
-        public ShiroBot(IConfigurationRoot configuration)
+        public ShiroBot()
         {
-            // Copy configuration to internal static variable
-            s_configuration = configuration;
-
-            // Setup logging
-            _setupLogging();
-
             // Instantiate a new discord client with configuration
             _discordClient = new DiscordSocketClient(new DiscordSocketConfig
             {
-                ConnectionTimeout = s_configuration.GetValue<int>("discord_client:connection_timeout", 10000),
-                AudioMode = (AudioMode)s_configuration.GetValue<int>("discord_client:audio_mode", 0),
-                MessageCacheSize = s_configuration.GetValue<int>("discord_client:message_cache_size", 100),
-                DownloadUsersOnGuildAvailable = s_configuration.GetValue<bool>("discord_client:download_users_on_guild_available", true),
-                LogLevel = (Discord.LogSeverity)s_configuration.GetValue<int>("discord_client:log_level", 4),
+                ConnectionTimeout = ShiroBotConfiguration.Load().DiscordClientConfig.connection_timeout,
+                AudioMode = (AudioMode)ShiroBotConfiguration.Load().DiscordClientConfig.audio_mode,
+                MessageCacheSize = ShiroBotConfiguration.Load().DiscordClientConfig.message_cache_size,
+                DownloadUsersOnGuildAvailable = ShiroBotConfiguration.Load().DiscordClientConfig.download_users_on_guild_available,
+                LogLevel = (Discord.LogSeverity)ShiroBotConfiguration.Load().DiscordClientConfig.log_level,
                 ShardId = 1, // Hard coding this as stand-alone ShiroBot does not need more than one shard
                 TotalShards = 1, // Hard coding this as stand-alone ShiroBot does not need more than one shard
             });
         }
 
         // Run ShiroBot
-        public async Task RunAsync()
+        public async Task StartAsync()
         {
-            // Grab a logger
-            s_log = LogManager.GetCurrentClassLogger();
-            s_log.Info($"{Program.BotName} v{Program.BotVersion} is starting up...");
+
+            // Reset state
+            if (ShiroBot.Stopped == true && ShiroBot.IsStopping == false)
+            {
+                ShiroBot.Stopped = false;
+            }
+            else
+            {
+                s_log.Fatal($"There is a problem starting {ShiroBot.s_BotName}, the stop states are corrupt.");
+                return;
+            }
+
+            s_log.Info($"{ShiroBot.s_BotName} v{ShiroBot.s_BotVersion} is starting up...");
 
             try
             {
                 // Try to connect to the discord network
-                s_log.Debug("Attempting to connect to Discord.");
-                await _discordClient.LoginAsync(Discord.TokenType.Bot, s_configuration.GetValue<string>("discord_client:connection_token"));
+                s_log.Debug("Attempting to connect to the Discord network.");
+                await _discordClient.LoginAsync(Discord.TokenType.Bot, ShiroBotConfiguration.Load().DiscordClientConfig.connection_token);
                 await _discordClient.ConnectAsync();
             }
             catch (System.Exception ex)
             {
                 // An exception was thrown, catch it and attempt to cleanly stop the bot, then exit
-                s_log.Fatal(ex, $"An exception was thrown whilst trying to connect to Discord. Exception thrown was: {0}");
-                await StopAsync();
-                System.Environment.Exit(-1);
+                s_log.Fatal(ex, $"An exception was thrown whilst trying to connect to the Discord network. Exception thrown was: {ex.ToString()}");
+                Stop();
             }
             finally
             {
+                // For some reason we're in a disconnected state despite no exception being thrown,
                 if (_discordClient.ConnectionState == Discord.ConnectionState.Disconnected)
                 {
                     s_log.Fatal("No exception was thrown however, a connection could not be made to the Discord network.");
-                    s_log.Fatal("Please report this as a bug here: " + Program.BotSupportUrl);
-                    System.Environment.Exit(-1);
+                    s_log.Fatal("Please report this as a bug here: " + ShiroBot.s_BotSupportUrl);
+                    Stop();
                 }
             }
-
-            // Start webservice but do not block on it.
-            //await _webService.BuildandRun(); // testing without awaiting, this may break things
 
             // Before logging that we are connected, check the state first
             if (_discordClient.ConnectionState == Discord.ConnectionState.Connected)
@@ -85,64 +91,87 @@ namespace ShiroBot
                 s_log.Info("Succesfully connected to the Discord network.");
             }
 
-            // Create a new instance of pluginservice and load some plugins
-            s_pluginService = new PluginService(s_configuration, _discordClient);
-            s_pluginService.LoadPlugin("greeter");
-
-            //_pluginService.loadAvailablePlugins(); -- implement a directory walk for *.dll files
-
-            // PSUDEO CODE
-            // var eventServiceHandler = new EventService(_discordClient);
             /**
+            * Begin plugin management and handling 
+            */
 
-            Something like.!--.!--.!--.!--
+            // Start up a new root plugin manager
+            s_RootPluginManager = new PluginManager(s_log);
+            s_RootPluginLoader = new PluginLoader(_discordClient);
 
-            eventService = new EventService();
-            pluginServiceHost = new PluginService();
 
-            foreach (pluginServiceHost.getResolvedPlugin()) 
-                eventService.addListner(pluginServiceHost.getResolvedPlugin().pluginName)
+            /**
+            * Pluginmanager needs to handle all hooks and events and call on plugins,
+            * it also needs to know the state of all plugins 
+            * Pluginmanager will need a static class of discord client in order to handle up/down stream of commands and info
+            * 
+            * PluginLoader works on watching and loading plugins into the manager 
+            *
+            * Iplugin needs to be the interface that all plugins implement
+            * 
+            */
 
-            // Now need to create a stats service as well  
-            // Place holder code for web and plugin service
-            // Place holder to start up events and delegates code
-            // Register events
-            // _discordClient.Log += _eventHandler.DiscordClientOnLog;
-            //_discordClient.MessageReceived += _eventHandler.DiscordClientOnMessageReceived;
-            **/
+            // loader can then go like s_RootPluginLoader.LoadPlugin(adasdasdsadad); which will automatically be avail to manager for stuff like
+            // s_RootPluginManager.listLoadedPlugins(); 
+
+            //s_RootPluginManager;
+
+            // Ok, we're going to need the plugin loader to load plugins into the plugin manager
+            // FFF, and need to create a new IPlugin class 
+
+            // Create a new instance of pluginmanager and load some plugins
+            // s_pluginService = new PluginService(s_configuration, _discordClient);
+            // s_pluginService.LoadPlugin("greeter");
         }
 
-        // Stop the bot
+        // Teardown/Stop tasks that are common to both asynch/synch stop methods
+        private void _stopCommon()
+        {
+            if (!ShiroBot.IsStopping)
+            {
+                s_log.Info($"Attempting to stop {ShiroBot.s_BotName}.");
+                ShiroBot.IsStopping = true;
+            }
+        }
+
+        // Stop the bot synchronously
+        public void Stop()
+        {
+            _stopCommon();
+            if (_discordClient.ConnectionState != Discord.ConnectionState.Disconnected)
+            {
+                s_log.Debug("Attempting to disconnect from Discord.");
+                _discordClient.DisconnectAsync();
+            }
+            ShiroBot.Stopped = true;
+            ShiroBot.IsStopping = false;
+        }
+
+        // Stop the bot asynchronously
         public async Task StopAsync()
         {
-            s_log.Debug("Attempting to disconnect from Discord.");
-            await _discordClient.DisconnectAsync();
-            // await ShiroBot.PluginService.StopAsync();
-            // await ShiroBot.WebService.StopAsync();
+            _stopCommon();
+            if (_discordClient.ConnectionState != Discord.ConnectionState.Disconnected)
+            {
+                s_log.Debug("Attempting to disconnect from Discord.");
+                await _discordClient.DisconnectAsync();
+            }
+            ShiroBot.Stopped = true;
+            ShiroBot.IsStopping = false;
         }
 
-        /**
-        * A few private helper functions (TODO: List them out)
-        **/
-
-        // A helper function to setup a new logconfiguration for all of ShiroBot to use.
-        private static void _setupLogging()
+        // Stop the bot asynchronously
+        public async Task RestartAsync()
         {
-            try
-            {
-                var logConfiguration = new LoggingConfiguration();
-                var consoleTarget = new ColoredConsoleTarget();
-
-                consoleTarget.Layout = @"${date:format=HH\:mm\:ss} ${logger} | ${message}";
-                logConfiguration.AddTarget("Console", consoleTarget);
-                logConfiguration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, consoleTarget));
-                LogManager.Configuration = logConfiguration;
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine($"The following exception was thrown when trying to setup logger: {ex}");
-                System.Environment.Exit(-1);
-            }
+            await this.StopAsync();
+            await this.StartAsync();
         }
+
+        // Reload the bot asynchronously
+        public void ReloadAsync()
+        {
+            //TODO
+        }
+
     }
 }

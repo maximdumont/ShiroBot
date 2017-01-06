@@ -1,69 +1,136 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
+using ShiroBot.Configuration;
 
 namespace ShiroBot
 {
     public class Program
     {
-        // Internal reference: bot information
-        public const string BotName = "ShiroBot";
-        public const string BotVersion = "0.0.1b";
-        public const string BotSupportUrl = "https://github.com/keyphact/ShiroBot/issues";
+        // ShiroBot instance
+        public static ShiroBot s_ShiroBot { get; set; }
 
-        // General ShiroBot configuration
-        private static IConfigurationRoot s_configuration;
+        // Private variable for logging in this class
+        private static Logger s_log = LogManager.GetCurrentClassLogger();
 
-        // Needed for thread control
-        private static readonly ManualResetEvent s_mre = new ManualResetEvent(false);
-
-        // Main application
-        // http://blog.stephencleary.com/2014/12/a-tour-of-task-part-6-results.html
         public static void Main(string[] args)
         {
-            // time to copy a line or two from discord.net bot example documentation
+            // Setup console title
+            Console.Title = $"{ShiroBot.s_BotName} - {ShiroBot.s_BotVersion}";
 
-            // Configure console
-            // On ctrl-c unblock threads via (mre.Set) and continue to shutdown bot
-            Console.Title = $"{BotName} - {BotVersion}";
-            Console.CancelKeyPress += (sender, eventArgs) =>
-            {
-                s_mre.Set();
-                eventArgs.Cancel = true;
-            };
+            // Starter Functions
+            SetupLogging();
+            InitializeConfiguration();
 
-            // Load and build configuration into static variable to pass to ShiroBot
-            try
+            // Instantiate and start a new instance of ShiroBot
+            s_ShiroBot = new ShiroBot();
+            StartShiroBotAsync();
+
+            // Loop infinitely over console line text, if it's not exit, keep running and parsing commands
+            string consoleLine = string.Empty;
+            while (consoleLine != "exit")
             {
-                s_configuration = new ConfigurationBuilder()
-                                    .SetBasePath(Directory.GetCurrentDirectory())
-                                    .AddJsonFile("Configuration/ShiroBot.json", optional: false, reloadOnChange: true)
-                                    .Build();
+                // Read new console line in, and split input by spaces
+                consoleLine = Console.ReadLine();
+                string[] argv = consoleLine.Split(new char[] { ' ' }, 1);
+
+                // Detect the following console commands
+                switch (argv[0])
+                {
+                    case "start":
+                        StartShiroBotAsync();
+                        break;
+                    case "stop":
+                    case "exit":
+                        StopShiroBotAsync();
+                        break;
+                    case "restart":
+                        RestartShiroBotAsync();
+                        break;
+                    case "reload":
+                        ReloadShiroBotAsync();
+                        break;
+                    default:
+                        break;
+                }
             }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine("Exception raised while trying to load bot configuration file. {0}", ex.ToString());
-                System.Environment.Exit(-1);
-            }
-
-            RunBot().GetAwaiter().GetResult();
         }
 
-        private static async Task RunBot()
+        // Start ShiroBot asynchronously
+        public static async void StartShiroBotAsync()
         {
-            // Instantiate a new ShiroBot
-            var shiroBot = new ShiroBot(s_configuration);
+            await s_ShiroBot.StartAsync();
+        }
 
-            // Run ShiroBot
-            await shiroBot.RunAsync();
+        // Stop ShiroBot asynchronously
+        public static async void StopShiroBotAsync()
+        {
+            await s_ShiroBot.StopAsync();
+        }
 
-            // Block all threads here
-            s_mre.WaitOne();
+        // Restart ShiroBot asynchronously
+        public static async void RestartShiroBotAsync()
+        {
+            await s_ShiroBot.RestartAsync();
+        }
 
-            // Shutdown ShiroBot, once mre has been set
-            await shiroBot.StopAsync();
+        // Reload ShiroBot asynchronously
+        public static void ReloadShiroBotAsync()
+        {
+            // TODO
+            //await s_ShiroBot.ReloadAsync();
+        }
+
+        // A helper function to setup a new logconfiguration to use with the logmanager.
+        public static void SetupLogging()
+        {
+            // Creating configuration
+            var nLogConfiguration = new LoggingConfiguration();
+
+            // Creating targets
+            var consoleTarget = new ColoredConsoleTarget();
+            nLogConfiguration.AddTarget("console", consoleTarget);
+            var fileTarget = new FileTarget();
+            nLogConfiguration.AddTarget("file", fileTarget);
+
+            // Configure target properties
+            consoleTarget.Layout = @"${date:format=HH\:mm\:ss} ${logger} | ${message}";
+            fileTarget.FileName = $"Logs/{ShiroBot.s_BotName}.log";
+            fileTarget.Layout = @"${date:format=HH\:mm\:ss} ${logger} | ${message}";
+
+            // Define logging rules
+            nLogConfiguration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, consoleTarget));
+            nLogConfiguration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, fileTarget));
+
+            // Activate logging configuration§
+            LogManager.Configuration = nLogConfiguration;
+        }
+
+        // Ensure bot configuration is there and can be loaded
+        public static void InitializeConfiguration()
+        {
+            // Create configuration directory if it doesn't exist
+            if (!Directory.Exists(Path.Combine(AppContext.BaseDirectory, "Configuration")))
+            {
+                Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "Configuration"));
+            }
+
+            string loc = Path.Combine(AppContext.BaseDirectory, "Configuration/ShiroBot.json");
+
+            // If configuration file does't exist, create it and exit
+            if (!File.Exists(loc))
+            {
+                var shiroBotConfiguration = new ShiroBotConfiguration();
+                shiroBotConfiguration.Save();
+
+                s_log.Fatal(
+                    "A new configuration file has been created at ${loc}," +
+                    "please ensure that all information has been updated and restart ${ShiroBot.s_BotName}.");
+                Environment.Exit(0);
+            }
+            s_log.Info("Configuration Loaded");
         }
     }
 }
