@@ -33,7 +33,7 @@
   "buildOptions": {
     "emitEntryPoint": true, // produce executable, false = library
     "preserveCompilationContext": true, // preserve reference assemblies
-    "warningsAsErrors": true,
+    "warningsAsErrors": true
     // "xmlDoc": true // generate xml documentation
   },
   "runtimeOptions": {
